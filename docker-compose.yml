@@ -1,0 +1,11 @@
+faucet:
+  image: superhow/lared-faucet
+  stop_signal: SIGINT
+  environment:
+    - DEFAULT_NODE=http://51.116.118.178:3000
+    - FAUCET_PRIVATE_KEY=__PRIVATE_KEY__
+    - NATIVE_CURRENCY_NAME=lared.moneda
+    - NATIVE_CURRENCY_ID=4131C5FD69F7A75C
+    - EXPLORER_URL=explorer.superhow.net
+  ports:
+    - '4000:4000'

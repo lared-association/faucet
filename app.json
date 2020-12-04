@@ -4,7 +4,6 @@
   "keywords": [
     "symbol",
     "nem",
-    "nem2",
     "catapult",
     "blockchain"
   ],
@@ -52,7 +51,7 @@
       "required": false
     },
     "NEM_FEE_MULTIPLIER": {
-      "required": false,
+      "required": false
     },
     "NEM_MAX_FEE": {
       "required": false,

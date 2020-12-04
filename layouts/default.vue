@@ -1,17 +1,15 @@
-<template lang="pug">
-#app
-  Navbar
-  nuxt
-  Footer
+<template>
+  <div id="app">
+    <nuxt />
+    <Footer />
+  </div>
 </template>
 
 <script>
-import Navbar from '~/components/Navbar'
-import Footer from '~/components/Footer'
+import Footer from '@/components/Footer'
 
 export default {
   components: {
-    Navbar,
     Footer
   },
   head() {
@@ -19,3 +17,21 @@ export default {
   }
 }
 </script>
+
+<style lang="scss" scoped>
+html, body, #fullheight {
+    min-width: 100% !important;
+    width: 100%;
+}
+
+#app {
+    height: 100vh;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: space-between;
+    flex-direction: column;
+}
+</style>
+

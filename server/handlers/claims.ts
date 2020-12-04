@@ -1,271 +1,187 @@
-import _ from "lodash"
-import qs from "querystring"
-import axios from "axios"
-import { ChronoUnit } from "js-joda"
 import {
-  Account,
-  AccountInfo,
-  Address,
-  Mosaic,
-  Deadline,
-  UInt64,
-  Message,
-  EmptyMessage,
-  PlainMessage,
-  RepositoryFactoryHttp,
-  TransactionHttp,
-  TransferTransaction,
+    Account,
+    Address,
+    Mosaic,
+    UInt64,
+    EmptyMessage,
+    TransferTransaction,
+    Deadline,
+    MosaicId,
+    RepositoryFactory,
+    TransactionType,
+    TransactionGroup
 } from "symbol-sdk"
 import { of, forkJoin } from "rxjs"
-import { map, mergeMap } from "rxjs/operators"
+import { map, mergeMap, filter, toArray, catchError } from "rxjs/operators"
 import { IAppConfig } from "../bootstrap"
-import { AccountService } from "../services"
 
-// import "../patch/Deadline"
+const toRelativeAmount = (amount: number, divisibility: number) => amount / Math.pow(10, divisibility)
 
-_.mixin({
-  isBlank: val => (_.isEmpty(val) && !_.isNumber(val)) || _.isNaN(val)
-})
+const toAbsoluteAmount = (amount: number, divisibility: number) => amount * Math.pow(10, divisibility)
+
+const getMosaicsRandomAmount = (faucetBalance: number) => {
+    const max = faucetBalance * 0.15
+    const min = faucetBalance * 0.1
+    const absoluteAmount = Math.random() * (max - min) + min
+    return Math.round(absoluteAmount)
+}
+
+const getNativeCurrencyRandomAmount = (faucetBalance: number, minOut: number,  maxOut: number) => {
+    const absoluteAmount =  Math.min(Math.min(faucetBalance, maxOut), Math.random() * (minOut - maxOut + 1) + maxOut)
+    return Math.round(absoluteAmount)
+}
 
 export const handler = (conf: IAppConfig) => {
-  const repoFactory = new RepositoryFactoryHttp(conf.API_URL)
-  const chainRepo = repoFactory.createChainRepository()
-  const mosaicRepo = repoFactory.createMosaicRepository()
+    return async (req: any, res: any, next: any) => {
+        const { recipient, amount, selectedMosaics } = req.body
+        console.debug({recipient, amount, selectedMosaics})
+        if (typeof recipient !== 'string' || recipient.length !== 39)
+            throw new Error(`recipient address invalid.`)
 
-  const transactionHttp = new TransactionHttp(conf.API_URL)
-  const accountService = new AccountService(conf.API_URL, conf.NETWORK_TYPE)
+        if (typeof amount !== 'number')
+            throw new Error(`amount format invalid.`)
 
-  return async (req: any, res: any, next: any) => {
-    const {
-      recipient,
-      amount,
-      message,
-      encryption,
-      reCaptcha
-    } = req.body
-    console.debug({ recipient, amount, message, encryption, reCaptcha })
+        if (!Array.isArray(selectedMosaics))
+            throw new Error(`mosaics is not array.`)
 
-    if (conf.RECAPTCHA_ENABLED) {
-      const reCaptchaResult = await requestReCaptchaValidation(
-        reCaptcha,
-        conf.RECAPTCHA_SERVER_SECRET || "",
-        conf.RECAPTCHA_ENDPOINT
-      ).catch(_ => false)
-      if (!reCaptchaResult) {
-        return res.status(422).json({ error: "Failed ReCaptcha." })
-      }
-    } else {
-      console.debug("Disabled ReCaptcha")
-    }
+        const mosaicIds = selectedMosaics.map(mosaic => new MosaicId(mosaic))
+        const repositoryFactory: RepositoryFactory = conf.REPOSITORY_FACTORY
+        const faucetAccount: Account = conf.FAUCET_ACCOUNT
+        const recipientAddress: Address = Address.createFromRawAddress(recipient)
+        const networkType = await repositoryFactory.getNetworkType().toPromise()
+        const generationHash = await repositoryFactory.getGenerationHash().toPromise()
+        const feeMultiplier = await (await repositoryFactory.createNetworkRepository().getTransactionFees().toPromise()).highestFeeMultiplier
 
-    const recipientAddress = Address.createFromRawAddress(recipient)
-    // @ts-ignore HACK: using internal
-    const recipientAccount = new Account(recipientAddress)
-    console.debug(`Recipient => %s`, recipientAccount.address.pretty())
-
-    const currentHeight = await chainRepo.getBlockchainHeight().toPromise()
-    console.debug(`Current Height => %s`, currentHeight)
-
-    forkJoin([
-      // fetch mosaic info
-      mosaicRepo.getMosaic(conf.MOSAIC_ID),
-      // check recipient balance
-      accountService.getAccountInfoWithMosaicAmountView(recipientAccount, conf.MOSAIC_ID)
-        .pipe(
-          map(({ accountInfo, mosaicAmountView }) => {
-            if (
-              mosaicAmountView &&
-              mosaicAmountView.amount.compact() > conf.MAX_BALANCE
-            ) {
-              throw new Error(`Your account already has enough balance => (${mosaicAmountView.relativeAmount()})`)
-            }
-            return accountInfo
-          })
-        ),
-      // check faucet balance
-      accountService.getAccountInfoWithMosaicAmountView(conf.FAUCET_ACCOUNT, conf.MOSAIC_ID)
-        .pipe(
-          map(({ mosaicAmountView }) => {
-            if (
-              mosaicAmountView
-              && mosaicAmountView.amount.compact() < conf.OUT_MAX
-            ) {
-              throw new Error("The faucet has been drained.")
-            }
-            return mosaicAmountView
-          })
-        ),
-      // check faucet outgoing
-      accountService.getTransferOutgoings(
-        conf.FAUCET_ACCOUNT,
-        recipientAccount,
-        currentHeight,
-        conf.WAIT_BLOCK
-      )
-        .pipe(
-          map(txes => {
-            if (txes.length > 0) {
-              throw new Error(`Too many claiming. Please wait for ${conf.WAIT_BLOCK} blocks.`)
-            }
-            return txes
-          })
-        ),
-      // check faucet unconfirmed
-      accountService.getTransferUnconfirmed(conf.FAUCET_ACCOUNT, recipientAccount)
-        .pipe(
-          map(txes => {
-            if (txes.length >= conf.MAX_UNCONFIRMED) {
-              throw new Error(`Too many unconfirmed claiming. Please wait ${txes.length} transactions confirmed.`)
-            }
-            return txes
-          })
-        )
-    ])
-      .pipe(
-        map(results => {
-          const [ mosaicInfo, recipientAccount, faucetOwned ] = results
-
-          // determine amount to pay out
-          const divisibility = mosaicInfo.divisibility
-// @ts-ignore WIP
-          const faucetBalance = faucetOwned.amount.compact()
-          const txAbsoluteAmount =
-            sanitizeAmount(amount, divisibility, conf.OUT_MAX) ||
-            Math.min(
-              faucetBalance,
-              randomInRange(conf.OUT_MIN, conf.OUT_MAX, divisibility)
-            )
-// @ts-ignore WIP
-          console.debug(`Faucet balance => %d`, faucetOwned.relativeAmount())
-// @ts-ignore WIP
-          console.debug(`Mosaic divisibility => %d`, divisibility)
-          console.debug(`Input amount => %s`, amount)
-          console.debug(`Payout amount => %d`, txAbsoluteAmount)
-
-          const mosaic = new Mosaic(
-            mosaicInfo.id,
-            UInt64.fromUint(txAbsoluteAmount)
-          )
-
-          const isMultipler = !!conf.FEE_MULTIPLIER
-          const feeFactor = [
-            conf.FEE_MULTIPLIER,
-            conf.MAX_FEE,
-            5000000 // TODO: set network multipler
-          ].find(_ => !!_) as number
-          const transferTx = buildTransferTransaction(
-            recipientAddress,
-            conf.MAX_DEADLINE,
-            [mosaic],
-            buildMessage(
-              message,
-              encryption,
-              conf.FAUCET_ACCOUNT,
-              recipientAccount
+        forkJoin(
+            repositoryFactory.createNamespaceRepository().getMosaicsNames(mosaicIds),
+            repositoryFactory.createMosaicRepository().getMosaics(mosaicIds),
+            repositoryFactory.createAccountRepository().getAccountInfo(faucetAccount.address),
+            repositoryFactory.createAccountRepository().getAccountInfo(recipientAddress).pipe(
+                catchError(error => {
+                    console.error({ error })
+                    return of(null)
+                })
             ),
-            feeFactor,
-            isMultipler
-          )
+            repositoryFactory.createTransactionRepository().search({
+                group: TransactionGroup.Unconfirmed,
+                address: faucetAccount.address,
+            }).pipe(
+                mergeMap(_ => _.data),
+                filter(tx => tx.type === TransactionType.TRANSFER),
+                map(_ => _ as TransferTransaction),
+                filter(tx => tx.recipientAddress.equals(recipientAddress)),
+                toArray(),
+                catchError(error => {
+                    console.error({ error })
+                    return of([])
+                })
+            )
+        )
+        .pipe(
+            map(results => {
+                const [requestMosaicName, requestMosaicInfo, faucetAccountInfo, recipientAccountInfo, unconfirmedTransactions ] = results
 
-          console.debug(`FeeFactor => %s, Multipler => %s`, feeFactor, isMultipler)
-          console.debug(`Generation Hash => %s`, conf.GENERATION_HASH)
-          const signedTx = conf.FAUCET_ACCOUNT.sign(
-            transferTx,
-            conf.GENERATION_HASH
-          )
-          console.debug("Payload:", signedTx.payload)
-          return {
-            signedTx,
-            relativeAmount: txAbsoluteAmount / 10 ** mosaicInfo.divisibility
-          }
-        }),
-        mergeMap(({ signedTx, relativeAmount }) => {
-          return transactionHttp.announce(signedTx).pipe(
-            mergeMap(resp => of({
-              resp,
-              txHash: signedTx.hash,
-              amount: relativeAmount
-            }))
-          )
-        })
-      )
-      .subscribe(
-        result => res.json(result),
-        error => {
-          console.error(error)
-          res.status(422).json({ error: error.message })
-        }
-      )
-  }
-}
+                const requestMosaicsFromFaucetAccount = faucetAccountInfo.mosaics.filter(mosaic => requestMosaicInfo.map(mosaicInfo => mosaicInfo.id.toHex()).includes(mosaic.id.toHex()))
 
-const buildMessage = (
-  message = "",
-  encryption = false,
-  faucetAccount: Account,
-  recipientAccountInfo?: AccountInfo | null,
-) => {
-  if (encryption && recipientAccountInfo === undefined) {
-    throw new Error("Required recipient public key exposed to encrypt message.")
-  }
-  if (message === "") {
-    console.debug("Empty message")
-    return EmptyMessage
-  } else if (encryption && recipientAccountInfo) {
-    console.debug("Encrypt message => %s", message)
-    return faucetAccount.encryptMessage(message, recipientAccountInfo.publicAccount)
-  } else {
-    console.debug("Plain message => %s", message)
-    return PlainMessage.create(message)
-  }
-}
+                if (!requestMosaicInfo.length)
+                    throw new Error(`Requested mosaic is not available in network.`)
 
-const buildTransferTransaction = (
-  address: Address,
-  deadline: number,
-  transferrable: Mosaic[],
-  message: Message,
-  feeFactor: number,
-  isMultiplier = false
-) => {
-  let tx = TransferTransaction.create(
-    Deadline.create(deadline, ChronoUnit.MINUTES),
-    address,
-    transferrable,
-    message,
-    address.networkType,
-    UInt64.fromUint(feeFactor)
-  )
-  if(isMultiplier) {
-    tx = tx.setMaxFee(feeFactor) as TransferTransaction
-  }
-  return tx
-}
+                if (!requestMosaicsFromFaucetAccount.length)
+                    throw new Error(`Requested mosaic is not available in faucet account.`)
 
-const requestReCaptchaValidation = async (resp: any, secret: string, endpoint: string) => {
-  const body = qs.stringify({ resp, secret })
-  const headers = { "Content-Type": "application/x-www-form-urlencoded" }
-  const result = await axios
-    .post(endpoint, body, { headers })
-    .catch(error => error.response)
-  console.debug(result)
-  return result.status === 200 && result.data.success
-}
+                if (conf.BLACKLIST_MOSAICIDS.filter(mosaicHex => requestMosaicInfo.map(mosaicInfo => mosaicInfo.id.toHex()).includes(mosaicHex)).length)
+                    throw new Error(`Requested mosaic is blacklisted.`)
 
-const randomInRange = (from: number, to: number, base: number) => {
-  const value = Math.random() * (from - to + 1) + to
-  return base ? Math.round(value / 10 ** base) * 10 ** base : value
-}
+                if (unconfirmedTransactions.length >= conf.MAX_UNCONFIRMED)
+                    throw new Error(
+                        `Too many unconfirmed claiming.
+                        Please wait ${unconfirmedTransactions.length} transactions confirmed.`)
 
-const sanitizeAmount = (amount: number, base: number, max: number) => {
-  const absoluteAmount = amount * 10 ** base
-  if (absoluteAmount > max) {
-    return max
-  } else if (absoluteAmount <= 0) {
-    return 0
-  } else {
-    return absoluteAmount
-  }
+                for (let mosaic of requestMosaicsFromFaucetAccount) {
+                    if (mosaic.id.toHex() !== conf.NATIVE_CURRENCY_ID){
+                        if (mosaic.amount.compact() <= 0)
+                            throw new Error(`Faucet balance not enought to pay out.`)
+                    }
+                    else {
+                        // XYM Check
+                        const nativeCurrencyMosaicInfo = requestMosaicInfo.find(mosaicInfo => mosaicInfo.id.equals(mosaic.id))
+
+                        if (!nativeCurrencyMosaicInfo)
+                            throw new Error(`Native currency mosaic not found.`)
+
+                        const nativeCurrencyBalance = toRelativeAmount(mosaic.amount.compact(), nativeCurrencyMosaicInfo.divisibility)
+
+                        const maxOut = toRelativeAmount(conf.NATIVE_CURRENCY_OUT_MAX, nativeCurrencyMosaicInfo.divisibility)
+                        const minOut = toRelativeAmount(conf.NATIVE_CURRENCY_OUT_MIN, nativeCurrencyMosaicInfo.divisibility)
+
+                        // Check recipientBalanceMosaic
+                        if (recipientAccountInfo) {
+                            for (let recipientBalance of recipientAccountInfo.mosaics) {
+                                if (recipientBalance.id.equals(mosaic.id))
+                                    if (recipientBalance.amount.compact() > conf.MAX_BALANCE)
+                                        throw new Error(`Your account already has enough balance for ${conf.NATIVE_CURRENCY_NAME}`)
+                            }
+                        }
+
+                        // Check Request Amount if More than maxOut
+                        if(amount > maxOut)
+                            throw new Error(`${conf.NATIVE_CURRENCY_NAME} faucet available from ${minOut} to ${maxOut}`)
+
+                        // Check Request Amount
+                        if (amount > nativeCurrencyBalance)
+                            throw new Error(`Faucet balance not enought to pay out.`)
+                    }
+                }
+
+                const requestedMosicList = requestMosaicsFromFaucetAccount.map(mosaic => {
+                    const mosaicDivisibility = requestMosaicInfo.find(mosaicInfo => mosaicInfo.id.equals(mosaic.id))
+
+                    if (!mosaicDivisibility)
+                        throw new Error(`Error occur during prepare Mosaic.`)
+
+                     const randomAmount = mosaic.id.toHex() === conf.NATIVE_CURRENCY_ID ?
+                        toAbsoluteAmount(amount, mosaicDivisibility.divisibility) || getNativeCurrencyRandomAmount(mosaic.amount.compact(), conf.NATIVE_CURRENCY_OUT_MIN, conf.NATIVE_CURRENCY_OUT_MAX) :
+                        getMosaicsRandomAmount(mosaic.amount.compact())
+
+                    return new Mosaic(mosaic.id, UInt64.fromUint(randomAmount))
+                } )
+
+                const transaction = TransferTransaction.create(
+                    Deadline.create(),
+                    recipientAddress,
+                    requestedMosicList,
+                    EmptyMessage,
+                    networkType
+                    ).setMaxFee(feeMultiplier > 0 ? feeMultiplier : 1000)
+
+                const transferMosaics = requestedMosicList.map(mosaic => {
+                    const mosaicName: any = requestMosaicName.find(mosaicName => mosaicName.mosaicId.equals(mosaic.id))
+                    const mosaicInfo: any = requestMosaicInfo.find(mosaicInfo => mosaicInfo.id.equals(mosaic.id))
+                    const name = mosaicName.names.length ? mosaicName.names[0].name : mosaicName.mosaicId.id.toHex()
+
+                    return {
+                       amount: toRelativeAmount(mosaic.amount.compact(), mosaicInfo.divisibility),
+                       name: name
+                    }
+                })
+
+                const signedTx = faucetAccount.sign(transaction,generationHash)
+
+                repositoryFactory.createTransactionRepository().announce(signedTx)
+
+                return {
+                    mosaics: transferMosaics,
+                    txHash: signedTx.hash
+                }
+            })
+        ).subscribe(
+            result => res.json(result),
+            error => {
+                console.log(error.message)
+                res.status(422).json({message: error.message})
+              }
+            )
+    }
 }
 
 export default handler
