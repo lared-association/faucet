@@ -5,11 +5,11 @@
       <div class="p-3">
         <b-col>
           <b-row>
-        <b-img src="~/assets/images/symbol_logo_white.svg" fluid alt="Symbol" width=240></b-img>
+        <b-img src="~/assets/images/lared_logo.png" fluid alt="LaRed" width=240></b-img>
       </b-row>
       <b-row>
         <div>
-          <span class="subTitle">Claim mosaics for development and testing purposes on the symbol network</span>
+          <span class="subTitle">Claim tokens for development and testing purposes on the LaRed network.</span>
         </div>
       </b-row>
 
@@ -24,7 +24,7 @@
 
       <b-row>
         <div class="info">
-          <span>Please send back claimed mosaics when you no longer need it.</span>
+          <span>Please send back claimed tokens when you no longer need them.</span>
           <span>Faucet Address:
             <span class="highlight">
               <a target="_blank" :href="faucetAccountUrl">
@@ -72,7 +72,7 @@ export default {
       return `Address start with a capital ${this.networkInfo.address[0]}`
     },
     amountPlaceholder () {
-      return `(Faucet will pay up to ${this.networkInfo.nativeCurrencyMaxOut} XYM, or enter custom amount)`
+      return `(Faucet will pay up to ${this.networkInfo.nativeCurrencyMaxOut} lared.moneda, or enter custom amount)`
     },
     faucetAccountUrl () {
       return `${this.networkInfo.explorerUrl}accounts/${Address.createFromRawAddress(this.networkInfo.address).plain()}`

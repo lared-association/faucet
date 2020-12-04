@@ -13,7 +13,7 @@ export default {
     Footer
   },
   head() {
-    return { title: 'SYMBOL Faucet' }
+    return { title: 'LaRed Faucet' }
   }
 }
 </script>

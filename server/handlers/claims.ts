@@ -42,7 +42,7 @@ export const handler = (conf: IAppConfig) => {
             throw new Error(`amount format invalid.`)
 
         if (!Array.isArray(selectedMosaics))
-            throw new Error(`mosaics is not array.`)
+            throw new Error(`tokens is not array.`)
 
         const mosaicIds = selectedMosaics.map(mosaic => new MosaicId(mosaic))
         const repositoryFactory: RepositoryFactory = conf.REPOSITORY_FACTORY
@@ -84,13 +84,13 @@ export const handler = (conf: IAppConfig) => {
                 const requestMosaicsFromFaucetAccount = faucetAccountInfo.mosaics.filter(mosaic => requestMosaicInfo.map(mosaicInfo => mosaicInfo.id.toHex()).includes(mosaic.id.toHex()))
 
                 if (!requestMosaicInfo.length)
-                    throw new Error(`Requested mosaic is not available in network.`)
+                    throw new Error(`Requested token is not available in network.`)
 
                 if (!requestMosaicsFromFaucetAccount.length)
-                    throw new Error(`Requested mosaic is not available in faucet account.`)
+                    throw new Error(`Requested token is not available in faucet account.`)
 
                 if (conf.BLACKLIST_MOSAICIDS.filter(mosaicHex => requestMosaicInfo.map(mosaicInfo => mosaicInfo.id.toHex()).includes(mosaicHex)).length)
-                    throw new Error(`Requested mosaic is blacklisted.`)
+                    throw new Error(`Requested token is blacklisted.`)
 
                 if (unconfirmedTransactions.length >= conf.MAX_UNCONFIRMED)
                     throw new Error(
@@ -107,7 +107,7 @@ export const handler = (conf: IAppConfig) => {
                         const nativeCurrencyMosaicInfo = requestMosaicInfo.find(mosaicInfo => mosaicInfo.id.equals(mosaic.id))
 
                         if (!nativeCurrencyMosaicInfo)
-                            throw new Error(`Native currency mosaic not found.`)
+                            throw new Error(`Native currency token not found.`)
 
                         const nativeCurrencyBalance = toRelativeAmount(mosaic.amount.compact(), nativeCurrencyMosaicInfo.divisibility)
 

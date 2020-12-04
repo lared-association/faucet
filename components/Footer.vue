@@ -4,22 +4,9 @@
       <b-container fluid>
           <b-row class="footer-row mx-0 mx-md-4 mx-lg-4 px-lg-4">
               <b-col sm="12" lg="4" class="footer-description">
-                  <div class="ft-logo">
-                      <a href="https://www.nem.io/" target="_blank">
-                      <img src="~/assets/images/logo_footer.png" >
-                      </a>
-                  </div>
+                 
                   <div class="ft-desc mt-3" >
-                      <p>
-                      Symbol is a platform built on revolutionary blockchain
-                      technology, reimagining from scratch the ideal
-                      blockchain.
-                      Symbol does not only allow for standard peer-to-peer
-                      value transfer transactions, but instead does much
-                      more – store data, make transactions, prove identity,
-                      timestamp documents, and create arbitrary digital
-                      assets.
-                      </p>
+                   
                   </div>
               </b-col>
               <b-col sm="12" lg="4">
@@ -33,7 +20,7 @@
                       <li class="social-icon-item">
                         <a target="_blank" :href="explorerUrl">
                             <IconEarth />
-                              <span>Explorer</span>
+                              
                           </a>
                       </li>
                   </ul>
@@ -54,23 +41,10 @@
 
 
 <script>
-import IconGithub from 'vue-material-design-icons/Github.vue'
-import IconNewspaper from 'vue-material-design-icons/Newspaper.vue'
-import IconReddit from 'vue-material-design-icons/Reddit.vue'
-import IconForum from 'vue-material-design-icons/Forum.vue'
-import IconTelegram from 'vue-material-design-icons/Telegram.vue'
-import IconHomeCurrencyUsd from 'vue-material-design-icons/HomeCurrencyUsd.vue'
-import IconEarth from 'vue-material-design-icons/Earth.vue'
 
 export default {
   components: {
-    IconGithub,
-    IconNewspaper,
-    IconReddit,
-    IconForum,
-    IconTelegram,
-    IconHomeCurrencyUsd,
-    IconEarth
+    
   },
   computed: {
     networkInfo () {
@@ -85,33 +59,7 @@ export default {
   },
   data() {
     return {
-      links: [
-			{
-				"href": "https://nemflash.io/",
-				"text": "NEM News",
-				"icon": "IconNewspaper"
-			},
-			{
-				"href": "https://forum.nem.io/",
-				"text": "Forum",
-				"icon": "IconForum"
-			},
-			{
-				"href": "https://t.me/nemred",
-				"text": "Telegram",
-				"icon": "IconTelegram"
-			},
-			{
-				"href": "https://www.reddit.com/r/nem/",
-				"text": "Reddit",
-				"icon": "IconReddit"
-			},
-			{
-				"href": "https://github.com/nemtech",
-				"text": "Github",
-				"icon": "IconGithub"
-			}
-    ]
+      links: []
     }
   },
 }

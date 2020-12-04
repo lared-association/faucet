@@ -13,7 +13,7 @@
                 <div class="formInput">
 
                 <div class="inputGroup">
-                    <span>Mosaic</span>
+                    <span>Token</span>
                     <div class="mosaicGroup">
                         <div v-for="(list,index) in mosaicSelectManager" :key="'option_'+index">
                             <b-form-select v-model="list.mosaicId" size="sm" required @change="onChange" >
@@ -25,8 +25,8 @@
                     </div>
 
                     <div class="mosaicControlPanel">
-                        <a v-if="hasAddButton" @click="add_mosaic">Add Mosaic</a>
-                        <a v-if="hasRemoveButton" @click="remove_mosaic">Remove Mosaic</a>
+                        <a v-if="hasAddButton" @click="add_mosaic">Add Token</a>
+                        <a v-if="hasRemoveButton" @click="remove_mosaic">Remove Token</a>
                     </div>
                 </div>
 
@@ -36,7 +36,7 @@
                 </div>
 
                 <div v-if="hasNativeMosaicAmount" class="inputGroup">
-                    <span>XYM Amount</span>
+                    <span>Lared.moneda Amount</span>
                     <b-form-input type="number" id="input-small" size="sm" :placeholder="amountPlaceholder" v-model="form.amount" />
                 </div>
             </div>
@@ -154,15 +154,15 @@ export default {
     }
 }
 
-.faucetForm {
+  .faucetForm {
     height: 120%;
     border-radius: 8px;
     opacity: 0.7;
-    background: linear-gradient(120deg, #5200c6 0%, #44004e 100%);
+    background: linear-gradient(105deg,#8a0e0e,#630909 26%,#7a0a0a 64%,#6b0808);
     background-size: 100% auto;
     box-shadow: 0 1px 5px 1px #000a;
     margin-top: 15px;
-}
+  }
 
 .formInput {
     .inputGroup {
