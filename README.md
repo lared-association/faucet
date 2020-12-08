@@ -1,96 +1,80 @@
-# :potable_water: Symbol Faucet
+![](https://i.imgur.com/r8mM1TN.gif)
 
-## :heartbeat: Symbol Faucet
+# LaRed Faucet
 
-- [Symbol Faucet-01](https://symboldev-faucet-01.herokuapp.com/)
-- [Symbol Faucet-02](https://symboldev-faucet-02.herokuapp.com/)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 
-## :handshake: Using with catapult-service-bootstrap
+Claim tokens (lared.moneda) for development and testing purposes on the LaRed network.
+***
+### Simply enter the recipient address, the desired amount of lared.moneda and claim.
+![](https://i.imgur.com/CcODTOc.gif)
 
-### Build or Pull image
+***
+## Requirements
 
-```console
-# build image
-$ docker build -t my-symbol-faucet .
+**Node.js** is required to run LaRed Faucet as a web application, version **12 LTS** is recommended.
+It is also recommended to install **npm**, the Node.js package manager. This can be done by executing the following command:
 
-# or pull from dockerhub
-$ docker pull 44uk/symbol-faucet:fushicho3
-```
+   ```
+sudo apt install npm
+   ```
+***
+## Building instructions
 
-### Add as service
+1. Clone the project.
 
-#### (Quickest way) Using nemesis Private Key example
 
-```yaml:docker-compose.yml
-faucet:
-  # image: my-symbol-faucet # in case of built image
-  image: 44uk/symbol-faucet:fushicho3
-  stop_signal: SIGINT
-  command: sh -c "/bin/sleep 15 && /bin/sh /app/bin/create-env.sh && /usr/local/bin/npm start"
-  environment:
-    - DEFAULT_NODE=http://rest-gateway:3000
-  volumes:
-    # for reading private key from addresses.yaml
-    - ../../build/generated-addresses:/addresses:ro
-    # for reading generation hash from block file
-    - ../../data/api-node-0/00000:/data/00000:ro
-  ports:
-    - '4000:4000'
-  depends_on:
-    - rest-gateway
-    - api-node-0
-```
+    ```
+git clone https://github.com/superhow/lared-faucet.git
+    ```
 
-#### Using specific PrivateKey and GenerationHash
+2. Navigate to the project folder.
 
-```yaml:docker-compose.yml
-faucet:
-  image: 44uk/symbol-faucet:fushicho3
-  stop_signal: SIGINT
-  environment:
-    - DEFAULT_NODE=http://rest-gateway:3000
-    - FAUCET_PRIVATE_KEY=__YOUR_PRIVATE_KEY__
-  ports:
-    - '4000:4000'
-  depends_on:
-    - rest-gateway
-```
+    ```
+cd lared-faucet
+    ```
+	
+3. Install the dependencies. This may take a while.
 
-#### Specific Mosaic faucet example
+    ```
+npm install 
+    ```
 
-```yaml:docker-compose.yml
-faucet:
-  image: 44uk/symbol-faucet:fushicho3
-  stop_signal: SIGINT
-  environment:
-    - DEFAULT_NODE=http://rest-gateway:3000
-    - NATIVE_CURRENCY_ID=3E70742C9A38ACAB
-  ports:
-    - '4000:4000'
-  depends_on:
-    - rest-gateway
-```
+4. Build the packages.
 
-## :sparkles: Deploy to Heroku
+    ```
+npm build run
+    ```
+    
+6. Start the app.
 
-[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
+    ```
+npm start
+    ```
+    
+7. Access the Faucet on your web browser. The default may be http://127.0.0.1:4000. If you get a "connection refused" error, check your .env file.
+***
+## Feature status
+### Features currently working
+* Real-time display of status notifications ✔️
+* Claiming lared.moneda (from 1 up to 1000) to a specified recipient ✔️
+* Faucet Address link to LaRed Explorer ✔️
 
-Need to set `NEM_PRIVATE_KEY`(PrivateKey of your faucet account) while deployment.
+### Features currently not working
+* Nothing to report so far.
+***
+## Main changes
+* Altered UI elements (footer, colors, text, images) for a more appealing, consistent and coherent appearance.
+* Changed terminology (Mosaics changed to Tokens).
+* Removed some irrelevant UI elements for less intrusive appearance.
+* Clicking the Faucet Address link opens up the Node Detail section in LaRed Explorer.
 
-If you want to use ReCaptcha, set both variables `RECAPTCHA_CLIENT_SECRET` and `RECAPTCHA_SERVER_SECRET`.
-
-## :whale: Dockerimage
-
-- [44uk\/symbol-faucet | Docker Hub](https://hub.docker.com/r/44uk/symbol-faucet)
-
-## :shell: Claimimg without Browser
-
-```shell
-curl http://localhost:4000/claims -d 'recipient=__YOUR_ADDRESS__'
-```
-
-## :fire: Customize
+***
+## Known issues
+* No major known issues so far.
+***
+## Customization (.env file example)
 
 ```shell
 # set enviroment variables
@@ -107,27 +91,4 @@ curl http://localhost:4000/claims -d 'recipient=__YOUR_ADDRESS__'
 # MAX_UNCONFIRMED
 # BLACKLIST_MOSAIC_ID
 # EXPLORER_URL
-# see .env.sample
-
-# install packages
-$ npm install
-
-# build the packages
-$ npm run build
-
-# start app
-$ npm start
-
-# access the Faucet on your web browser
-$ The default may be http://127.0.0.1:4000.
-
-# If you get a "connection refused" error, check your .env file.
 ```
-
-## :muscle: Powered by
-
-- [NEM - Distributed Ledger Technology (Blockchain) Catapult](https://www.nem.io/catapult/)
-- [nemtech/symbol\-sdk\-typescript\-javascript: symbol\-sdk official for typescript & javascript](https://github.com/nemtech/symbol-sdk-typescript-javascript)
-- [nuxt/nuxt\.js: The Vue\.js Framework](https://github.com/nuxt/nuxt.js)
-- [44uk/symbol\-faucet: Faucet application for symbol \(catapult\)](https://github.com/44uk/symbol-faucet)
-
