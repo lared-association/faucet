@@ -12,6 +12,7 @@ export const handler = (conf: IAppConfig) => {
     const defaultNode = new Url(conf.DEFAULT_NODE)
     const networkInfo = {
       address: conf.FAUCET_ACCOUNT.address.pretty(),
+      publicKey: conf.FAUCET_ACCOUNT.publicKey,
       hostname: defaultNode.hostname,
       defaultNode: defaultNode.origin,
       nativeCurrencyMaxOut: conf.NATIVE_CURRENCY_OUT_MAX / Math.pow(10, nativeMosaicInfo.divisibility),
