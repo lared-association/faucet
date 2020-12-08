@@ -14,12 +14,6 @@ Claim tokens (lared.moneda) for development and testing purposes on the LaRed ne
 ## Requirements
 
 **Node.js** is required to run LaRed Faucet as a web application, version **12 LTS** is recommended.
-It is also recommended to install **npm**, the Node.js package manager. This can be done by executing the following command:
-
-   ```
-sudo apt install npm
-   ```
-***
 ## Building instructions
 
 1. Clone the project.
