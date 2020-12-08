@@ -112,11 +112,16 @@ curl http://localhost:4000/claims -d 'recipient=__YOUR_ADDRESS__'
 # install packages
 $ npm install
 
+# build the packages
+$ npm run build
+
 # start app
 $ npm start
 
-# or for development
-$ npm run dev
+# access the Faucet on your web browser
+$ The default may be http://127.0.0.1:4000.
+
+# If you get a "connection refused" error, check your .env file.
 ```
 
 ## :muscle: Powered by
