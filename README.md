@@ -14,6 +14,7 @@ Claim tokens (lared.moneda) for development and testing purposes on the LaRed ne
 ## Requirements
 
 **Node.js** is required to run LaRed Faucet as a web application, version **12 LTS** is recommended.
+
 ## Building instructions
 
 1. Clone the project.
