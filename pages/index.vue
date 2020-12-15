@@ -74,7 +74,7 @@
         return `(Faucet will pay up to ${this.networkInfo.nativeCurrencyMaxOut} lared.moneda, or enter custom amount)`
       },
       faucetAccountUrl() {
-        return `${this.networkInfo.explorerUrl}nodes/${this.networkInfo.publicKey}`
+        return `${this.networkInfo.explorerUrl}accounts/${this.networkInfo.publicKey}`
       }
     },
     created() {
