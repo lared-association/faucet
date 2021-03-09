@@ -100,7 +100,7 @@ export const handler = (conf: IAppConfig) => {
           for (let mosaic of requestMosaicsFromFaucetAccount) {
             if (mosaic.id.toHex() !== conf.NATIVE_CURRENCY_ID) {
               if (mosaic.amount.compact() <= 0)
-                throw new Error(`Faucet balance not enought to pay out.`)
+                throw new Error(`Faucet balance not enough to pay out.`)
             }
             else {
               // XYM Check
@@ -125,11 +125,11 @@ export const handler = (conf: IAppConfig) => {
 
               // Check Request Amount if More than maxOut
               if (amount > maxOut)
-                throw new Error(`${conf.NATIVE_CURRENCY_NAME} faucet available from 1 to 1000.`)
+                throw new Error(`${conf.NATIVE_CURRENCY_NAME} faucet available from 1 to ${maxOut}.`)
 
               // Check Request Amount
               if (amount > nativeCurrencyBalance)
-                throw new Error(`Faucet balance not enought to pay out.`)
+                throw new Error(`Faucet balance not enough to pay out.`)
             }
           }
 
