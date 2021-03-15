@@ -1,13 +1,13 @@
 ![](https://i.imgur.com/r8mM1TN.gif)
 
-# LaRed Faucet
+# LaRed Faucet v0.3.0
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 
-Claim tokens (lared.moneda) for development and testing purposes on the LaRed network.
+Claim tokens for development and testing purposes on the LaRed network.
 ***
-### Simply enter the recipient address, the desired amount of lared.moneda and claim.
+### Simply enter the recipient address, the desired amount of selected token and claim.
 ![](https://i.imgur.com/CcODTOc.gif)
 
 ***
@@ -53,7 +53,7 @@ npm start
 ## Feature status
 ### Features currently working
 * Real-time display of status notifications ✔️
-* Claiming lared.moneda (from 1 up to 1000) to a specified recipient ✔️
+* Claiming selected token (from 1 up to maximum specified amount) to a specified recipient ✔️
 * Faucet Address link to LaRed Explorer ✔️
 
 ### Features currently not working
