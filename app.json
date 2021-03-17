@@ -35,11 +35,11 @@
     },
     "NEM_MOSAIC_FQN": {
       "required": false,
-      "description": "Distribution mosaic that linked namespace."
+      "description": "Distribution token that linked namespace."
     },
     "NEM_MOSAIC_HEX": {
       "required": false,
-      "description": "Distribution mosaicId."
+      "description": "Distribution tokenId."
     },
     "NEM_OUT_MIN": {
       "value": "200000000"

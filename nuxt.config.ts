@@ -6,7 +6,7 @@ const recaptchaPlugin =
     : []
 
 export const config: any = {
-  mode: 'universal',
+  telemetry: false,
 
   server: {
     host: process.env.HOST || '0.0.0.0',

@@ -1,25 +1,27 @@
 <template>
-  <div id="app">
-    <nuxt />
-    <Footer />
-  </div>
+    <div id="app">
+        <nuxt />
+        <Footer />
+    </div>
 </template>
 
 <script>
-import Footer from '@/components/Footer'
+import Footer from '@/components/Footer';
 
 export default {
-  components: {
-    Footer
-  },
-  head() {
-    return { title: 'LaRed Faucet' }
-  }
-}
+    components: {
+        Footer,
+    },
+    head() {
+        return { title: 'LaRed Faucet' };
+    },
+};
 </script>
 
 <style lang="scss" scoped>
-html, body, #fullheight {
+html,
+body,
+#fullheight {
     min-width: 100% !important;
     width: 100%;
 }
@@ -34,4 +36,3 @@ html, body, #fullheight {
     flex-direction: column;
 }
 </style>
-

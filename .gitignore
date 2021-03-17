@@ -82,4 +82,5 @@ dist
 
 # Service worker
 sw.*
+/target/
 /.vs
