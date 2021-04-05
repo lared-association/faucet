@@ -20,35 +20,35 @@ Claim tokens for development and testing purposes on the LaRed network.
 1. Clone the project.
 
 
-    ```
+```
 git clone https://github.com/superhow/lared-faucet.git
-    ```
+```
 
 2. Navigate to the project folder.
 
-    ```
+```
 cd lared-faucet
-    ```
+```
 	
 3. Install the dependencies. This may take a while.
 
-    ```
+```
 npm install 
-    ```
+```
 
 4. Build the packages.
 
-    ```
+```
 npm build run
-    ```
+```
     
-6. Start the app.
+5. Start the app.
 
-    ```
+```
 npm start
-    ```
+```
     
-7. Access the Faucet on your web browser. The default may be http://127.0.0.1:4000. If you get a "connection refused" error, check your .env file.
+6. Access the Faucet on your web browser. The default may be http://127.0.0.1:4000. If you get a "connection refused" error, check your .env file.
 ***
 ## Feature status
 ### Features currently working
